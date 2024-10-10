@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import './style.css';
 import { start } from "repl";
+import { GanttDate } from "./conponents/GanttDate";
 import { GanttBarArea } from "./conponents/GanttBarArea";
 
 function App() {
@@ -565,58 +566,7 @@ function App() {
 						</div>
 					</div>
 					<div id="gantt-calendar" className="overflow-x-scroll overflow-y-hidden border-l" style={{width: `${calendarSize.width}px`}}>
-						<div id="gantt-date" className="h-20">
-							<div id="gantt-year-month" className="relative h-8">
-								{calendars.map((calendar, index) => {
-									return (
-										<div key={index}>
-											<div className="bg-indigo-700 text-white border-b border-r border-t h-8 absolute font-bold text-sm flex items-center justify-center"
-											style={{width: `${calendar.calendar * blockSize}px`, left: `${calendar.startBlockNumber * blockSize}px`}}>
-												{calendar.date}
-											</div>
-										</div>
-									)
-								})}
-							</div>
-							<div id="gantt-day" className="relative h-12">
-								{calendars.map((calendar, index) => {
-									return (
-										<div key={index}>
-											{calendar.days.map((day, index) => {
-												return (
-													<div key={index}>
-														<div className={`border-r h-12 absolute flex items-center justify-center flex-col font-bold text-xs 
-														${day.dayOfWeek === '土' ? 'bg-blue-100' : ''} ${day.dayOfWeek === '日' ? 'bg-red-100' : ''}`}
-														style={{width: `${blockSize}px`, left: `${day.blockNumber * blockSize}px`}}>
-															<span>{day.day}</span>
-															<span>{day.dayOfWeek}</span>
-														</div>
-													</div>
-												)
-											})}
-										</div>
-									)
-								})}
-							</div>
-							<div id="gantt-height" className="relative">
-								{calendars.map((calendar, index) => {
-									return (
-										<div key={index}>
-											{calendar.days.map((day, index) => {
-												return (
-													<div key={index}>
-														<div className={`border-r border-b absolute 
-														${day.dayOfWeek === '土' ? 'bg-blue-100' : ''} ${day.dayOfWeek === '日' ? 'bg-red-100' : ''}`}
-														style={{width: `${blockSize}px`, left: `${day.blockNumber * blockSize}px`, height: `${calendarSize.height}px`}}>
-														</div>
-													</div>
-												)
-											})}
-										</div>
-									)
-								})}
-							</div>
-						</div>
+						<GanttDate calendars={calendars} calendarSize={calendarSize} blockSize={blockSize} />
 						<GanttBarArea calendarSize={calendarSize} taskBars={taskBars} onMouseDownMove={handleMouseDownMove} onMouseDownResize={handleMouseDownResize} />
 					</div>
 				</div>
