@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import './style.css';
 import { start } from "repl";
+import { DisplayPeriod } from "./conponents/DisplayPeriod";
 import { GanttTask } from "./conponents/GanttTask";
 import { GanttDate } from "./conponents/GanttDate";
 import { GanttBarArea } from "./conponents/GanttBarArea";
@@ -90,8 +91,8 @@ function App() {
 					id: 1,
 					category_id: 1,
 					name: 'テスト1',
-					start_date: '2020-11-18',
-					end_date: '2020-11-20',
+					start_date: '2024-10-18',
+					end_date: '2024-10-20',
 					incharge_user: '鈴木',
 					percentage: 100,
 					},
@@ -99,8 +100,8 @@ function App() {
 					id: 2,
 					category_id: 1,
 					name: 'テスト2',
-					start_date: '2020-11-19',
-					end_date: '2020-11-23',
+					start_date: '2024-10-19',
+					end_date: '2024-10-23',
 					incharge_user: '佐藤',
 					percentage: 90,
 				},
@@ -108,8 +109,8 @@ function App() {
 					id: 3,
 					category_id: 1,
 					name: 'テスト3',
-					start_date: '2020-11-19',
-					end_date: '2020-12-04',
+					start_date: '2024-10-19',
+					end_date: '2024-11-04',
 					incharge_user: '鈴木',
 					percentage: 40,
 				},
@@ -117,8 +118,8 @@ function App() {
 					id: 4,
 					category_id: 1,
 					name: 'テスト4',
-					start_date: '2020-11-21',
-					end_date: '2020-11-30',
+					start_date: '2024-10-21',
+					end_date: '2024-10-30',
 					incharge_user: '山下',
 					percentage: 60,
 				},
@@ -126,8 +127,8 @@ function App() {
 					id: 5,
 					category_id: 1,
 					name: 'テスト5',
-					start_date: '2020-11-25',
-					end_date: '2020-12-04',
+					start_date: '2024-10-25',
+					end_date: '2024-11-04',
 					incharge_user: '佐藤',
 					percentage: 5,
 				},
@@ -135,8 +136,8 @@ function App() {
 					id: 6,
 					category_id: 2,
 					name: 'テスト6',
-					start_date: '2020-11-28',
-					end_date: '2020-12-08',
+					start_date: '2024-10-28',
+					end_date: '2024-11-08',
 					incharge_user: '佐藤',
 					percentage: 0,
 				},
@@ -158,6 +159,7 @@ function App() {
 	}
 
 	function getTaskBars(startDate: Date, tasks: any, blockSize: number) {
+		const DATE_MILLI_SEC: number = (24 * 60 * 60 * 1000);
 		let top = 10;
 
 		let taskBars = tasks.map((task: any) => {
@@ -166,10 +168,14 @@ function App() {
 			if (task.cat === 'task') {
 				let date_from: Date = new Date(task.start_date);
 				let date_to: Date = new Date(task.end_date);
-				let diff: number = Math.floor((date_to.getTime() - date_from.getTime()) / (24 * 60 * 60 * 1000));
-				let between: number = diff + 1;
-				let start: number = Math.floor((date_from.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-				let left: number = start * blockSize;
+
+				let periodDiffMilliSec: number = date_to.getTime() - date_from.getTime();
+				let periodDiff: number = Math.floor(periodDiffMilliSec / DATE_MILLI_SEC);
+				let between: number = periodDiff + 1;
+
+				let startDiffMilliSec: number = date_from.getTime() - startDate.getTime();
+				let startDiff: number = Math.floor(startDiffMilliSec / DATE_MILLI_SEC);
+				let left: number = startDiff * blockSize;
 
 				style = {
 					top: `${top}px`,
@@ -194,17 +200,20 @@ function App() {
 		return tasks.slice(positionId, positionId + displayTaskNumber);
 	}
 
-	const startDate = new Date('2020-11-01');
-	const endDate = new Date('2021-01-01');
 	const blockSize = 30;
-	let calendars = getCalendar(startDate, endDate);
-	let positionId = 0;
 	const fps = 1000 / 30;
+	const today = new Date();
 
 	const [calendarSize, setCalendarSize] = React.useState({width: 0, height: 0});
 	const [tasks, setTasks] = React.useState(getTasks());
 	const [displayTasks, setDisplayTasks] = React.useState([]);
 	const [taskBars, setTaskBars] = React.useState([]);
+	const [startDate, setStartDate] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
+	const [endDate, setEndDate] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
+
+
+	let calendars = getCalendar(startDate, endDate);
+	let positionId = 0;
 
 	let moved: {
 		dragging: boolean,
@@ -227,6 +236,34 @@ function App() {
 	}
 
 	let movingPageX = 0;
+
+	function handleChangeStartYear(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextStartDate = new Date(startDate);
+		nextStartDate.setFullYear(parseInt(e.target.value));
+		let nextTaskBars = getTaskBars(nextStartDate, displayTasks, blockSize);
+		setStartDate(nextStartDate);
+		setTaskBars(nextTaskBars);
+	}
+
+	function handleChangeStartMonth(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextStartDate = new Date(startDate);
+		nextStartDate.setMonth(parseInt(e.target.value) - 1);
+		let nextTaskBars = getTaskBars(nextStartDate, displayTasks, blockSize);
+		setStartDate(nextStartDate);
+		setTaskBars(nextTaskBars);
+	}
+
+	function handleChangeEndYear(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextEndDate = new Date(endDate);
+		nextEndDate.setFullYear(parseInt(e.target.value));
+		setEndDate(nextEndDate);
+	}
+
+	function handleChangeEndMonth(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextEndDate = new Date(endDate);
+		nextEndDate.setMonth(parseInt(e.target.value) - 1);
+		setEndDate(nextEndDate);
+	}
 
 	function handleMouseDownMove(e: React.MouseEvent<HTMLDivElement, MouseEvent>, task: any) {
 		if (e.target instanceof HTMLElement) {
@@ -474,55 +511,9 @@ function App() {
 			<div id="app">
 				<div id="gantt-header" className="h-12 p-2 flex items-center">
 					<h1 className="text-xl font-bold">ガントチャート</h1>
-					<div className="ml-20">表示範囲</div>
-					<select className="border mx-2 p-1">
-						<option>2020</option>
-						<option>2021</option>
-						<option>2022</option>
-						<option>2023</option>
-						<option>2024</option>
-						<option>2025</option>
-					</select>
-					年
-					<select className="border mx-2 p-1">
-						<option>01</option>
-						<option>02</option>
-						<option>03</option>
-						<option>04</option>
-						<option>05</option>
-						<option>06</option>
-						<option>07</option>
-						<option>08</option>
-						<option>09</option>
-						<option>10</option>
-						<option>11</option>
-						<option>12</option>
-					</select>
-					月～
-					<select className="border mx-2 p-1">
-						<option>2020</option>
-						<option>2021</option>
-						<option>2022</option>
-						<option>2023</option>
-						<option>2024</option>
-						<option>2025</option>
-					</select>
-					年
-					<select className="border mx-2 p-1">
-						<option>01</option>
-						<option>02</option>
-						<option>03</option>
-						<option>04</option>
-						<option>05</option>
-						<option>06</option>
-						<option>07</option>
-						<option>08</option>
-						<option>09</option>
-						<option>10</option>
-						<option>11</option>
-						<option>12</option>
-					</select>
-					月
+					<DisplayPeriod startDate={startDate} endDate={endDate}
+					onChangeStartYear={handleChangeStartYear} onChangeStartMonth={handleChangeStartMonth}
+					onChangeEndYear={handleChangeEndYear} onChangeEndMonth={handleChangeEndMonth} />
 				</div>
 				<div id="gantt-content" className="flex">
 					<GanttTask displayTasks={displayTasks} calendarSize={calendarSize} />
