@@ -1,0 +1,23 @@
+.inner {
+    text-align: center;
+    display: flex;
+}
+
+.inner dl {
+    width: 150px;
+    margin: 1px;
+}
+
+.inner dl dt {
+    background-color: #9ad4ff;
+    width: 100%;
+    padding: 10px 0;
+    margin: 1px;
+}
+
+.inner dl dd {
+    background-color: #fff8df;
+    width: 100%;
+    padding: 10px 0;
+    margin: 1px;
+}
