@@ -208,9 +208,8 @@ function App() {
 	const [tasks, setTasks] = React.useState(getTasks());
 	const [displayTasks, setDisplayTasks] = React.useState([]);
 	const [taskBars, setTaskBars] = React.useState([]);
-	const [startDate, setStartDate] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
-	const [endDate, setEndDate] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
-
+	const [startDate, setStartDate] = React.useState(new Date(today.getFullYear(), today.getMonth() - 2, 1));
+	const [endDate, setEndDate] = React.useState(new Date(today.getFullYear(), today.getMonth() + 2, 1));
 
 	let calendars = getCalendar(startDate, endDate);
 	let positionId = 0;
@@ -236,34 +235,6 @@ function App() {
 	}
 
 	let movingPageX = 0;
-
-	function handleChangeStartYear(e: React.ChangeEvent<HTMLSelectElement>) {
-		let nextStartDate = new Date(startDate);
-		nextStartDate.setFullYear(parseInt(e.target.value));
-		let nextTaskBars = getTaskBars(nextStartDate, displayTasks, blockSize);
-		setStartDate(nextStartDate);
-		setTaskBars(nextTaskBars);
-	}
-
-	function handleChangeStartMonth(e: React.ChangeEvent<HTMLSelectElement>) {
-		let nextStartDate = new Date(startDate);
-		nextStartDate.setMonth(parseInt(e.target.value) - 1);
-		let nextTaskBars = getTaskBars(nextStartDate, displayTasks, blockSize);
-		setStartDate(nextStartDate);
-		setTaskBars(nextTaskBars);
-	}
-
-	function handleChangeEndYear(e: React.ChangeEvent<HTMLSelectElement>) {
-		let nextEndDate = new Date(endDate);
-		nextEndDate.setFullYear(parseInt(e.target.value));
-		setEndDate(nextEndDate);
-	}
-
-	function handleChangeEndMonth(e: React.ChangeEvent<HTMLSelectElement>) {
-		let nextEndDate = new Date(endDate);
-		nextEndDate.setMonth(parseInt(e.target.value) - 1);
-		setEndDate(nextEndDate);
-	}
 
 	function handleMouseDownMove(e: React.MouseEvent<HTMLDivElement, MouseEvent>, task: any) {
 		if (e.target instanceof HTMLElement) {
@@ -310,6 +281,15 @@ function App() {
 	}
 
 	React.useEffect(() => {
+		let ganttCalendarElement = document.getElementById('gantt-calendar');
+
+		if (ganttCalendarElement) {
+			let thisMonthFirstDate = new Date(today.getFullYear(), today.getMonth(), 1);
+			let diffMilliSec = thisMonthFirstDate.getTime() - startDate.getTime();
+			let diffDate = diffMilliSec / (24 * 60 * 60 * 1000);
+			ganttCalendarElement.scrollLeft = diffDate * blockSize;
+		}
+		
 		const nowCalendarSize = getCalendarSize();
 		const nowDisplayTasks = getDisplayTasks(tasks, positionId, nowCalendarSize.height);
 		const nowTaskBars = getTaskBars(startDate, nowDisplayTasks, blockSize);
@@ -511,9 +491,6 @@ function App() {
 			<div id="app">
 				<div id="gantt-header" className="h-12 p-2 flex items-center">
 					<h1 className="text-xl font-bold">ガントチャート</h1>
-					<DisplayPeriod startDate={startDate} endDate={endDate}
-					onChangeStartYear={handleChangeStartYear} onChangeStartMonth={handleChangeStartMonth}
-					onChangeEndYear={handleChangeEndYear} onChangeEndMonth={handleChangeEndMonth} />
 				</div>
 				<div id="gantt-content" className="flex">
 					<GanttTask displayTasks={displayTasks} calendarSize={calendarSize} />
