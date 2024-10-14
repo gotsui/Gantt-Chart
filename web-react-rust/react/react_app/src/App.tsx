@@ -30,6 +30,9 @@ function App() {
 	}
 
 	function getCalendar(startDate: Date, endDate: Date) {
+		console.log('--------------- getCalendar');
+		console.log('%o', {startDate});
+		console.log('%o', {endDate});
 		let yearDiff = endDate.getFullYear() - startDate.getFullYear();
 		let monthDiff = endDate.getMonth() + (12 * yearDiff) - startDate.getMonth();
 
@@ -289,7 +292,36 @@ function App() {
 			let diffDate = diffMilliSec / (24 * 60 * 60 * 1000);
 			ganttCalendarElement.scrollLeft = diffDate * blockSize;
 		}
-		
+
+		let ganttNextMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth() + 2}`);
+
+		if (ganttNextMonthElement) {
+			const observer = new IntersectionObserver((entries) => {callback(entries, observer, endDate)});
+			observer.observe(ganttNextMonthElement);
+		}
+
+		function callback(entries: IntersectionObserverEntry[], observer: IntersectionObserver, endDate: Date) {
+			const entry = entries[0];
+	
+			if (entry.isIntersecting) {
+				observer.unobserve(entry.target);
+	
+				const entryId = entry.target.id;
+				const splitIds = entryId.split('-');
+				const nextDate = new Date(parseInt(splitIds[1]), parseInt(splitIds[2]), 1);
+				const nextObserveElementId: string = `${splitIds[0]}-${nextDate.getFullYear()}-${nextDate.getMonth() + 1}`;
+				const nextObserveElement = document.getElementById(nextObserveElementId);
+	
+				let nextEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
+				setEndDate(nextEndDate);
+	
+				if (nextObserveElement) {
+					const nextObserver = new IntersectionObserver((entries) => {callback(entries, nextObserver, nextEndDate)});
+					nextObserver.observe(nextObserveElement);
+				}
+			}
+		}
+
 		const nowCalendarSize = getCalendarSize();
 		const nowDisplayTasks = getDisplayTasks(tasks, positionId, nowCalendarSize.height);
 		const nowTaskBars = getTaskBars(startDate, nowDisplayTasks, blockSize);
@@ -441,7 +473,7 @@ function App() {
 		moved.rightResizing = false;
 	});
 
-	// タスクバーのドラッグイベントを禁止する
+	// タスク期間変更時の誤作動を防ぐためタスクバーのドラッグイベントを禁止する
 	window.addEventListener('dragstart', (e) => {
 		e.preventDefault();
 	});
