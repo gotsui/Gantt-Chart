@@ -281,6 +281,7 @@ function App() {
 	}
 
 	React.useEffect(() => {
+		// 初期スクロール位置
 		const ganttCalendarElement = document.getElementById('gantt-calendar');
 
 		if (ganttCalendarElement) {
@@ -290,35 +291,15 @@ function App() {
 			ganttCalendarElement.scrollLeft = diffDate * blockSize;
 		}
 
+		// 右方向スクロール監視
 		const ganttNextMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth() + 2}`);
 
 		if (ganttNextMonthElement) {
-			const observer = new IntersectionObserver((entries) => {callback(entries, observer, endDate)});
+			const observer = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
 			observer.observe(ganttNextMonthElement);
 		}
 
-		function callback(entries: IntersectionObserverEntry[], observer: IntersectionObserver, endDate: Date) {
-			const entry = entries[0];
-
-			if (entry.isIntersecting) {
-				observer.unobserve(entry.target);
-
-				const entryId = entry.target.id;
-				const splitIds = entryId.split('-');
-				const nextDate = new Date(parseInt(splitIds[1]), parseInt(splitIds[2]), 1);
-				const nextObserveElementId: string = `${splitIds[0]}-${nextDate.getFullYear()}-${nextDate.getMonth() + 1}`;
-				const nextObserveElement = document.getElementById(nextObserveElementId);
-
-				let nextEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
-				setEndDate(nextEndDate);
-
-				if (nextObserveElement) {
-					const nextObserver = new IntersectionObserver((entries) => {callback(entries, nextObserver, nextEndDate)});
-					nextObserver.observe(nextObserveElement);
-				}
-			}
-		}
-
+		// 左方向スクロール監視
 		const ganttLastMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth()}`);
 
 		if (ganttCalendarElement && ganttLastMonthElement) {
@@ -368,6 +349,34 @@ function App() {
 		setDisplayTasks(nowDisplayTasks);
 		setTaskBars(nowTaskBars);
 	}, []);
+
+	React.useEffect(() => {
+		const observeDate: Date = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+		const observeElementId: string = `gantt-${observeDate.getFullYear()}-${observeDate.getMonth() + 1}`;
+		const observeElement: HTMLElement | null = document.getElementById(observeElementId);
+
+		if (observeElement) {
+			const observer = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
+			observer.observe(observeElement);
+		}
+	}, [endDate]);
+
+	function shiftRight(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
+		const entry = entries[0];
+
+		if (entry.isIntersecting) {
+			observer.unobserve(entry.target);
+
+			const entryId = entry.target.id;
+			const splitIds = entryId.split('-');
+			const nextDate = new Date(parseInt(splitIds[1]), parseInt(splitIds[2]), 1);
+			const nextObserveElementId: string = `${splitIds[0]}-${nextDate.getFullYear()}-${nextDate.getMonth() + 1}`;
+			const nextObserveElement = document.getElementById(nextObserveElementId);
+
+			let nextEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
+			setEndDate(nextEndDate);
+		}
+	}
 
 	window.addEventListener('resize', () => {
 		setCalendarSize(getCalendarSize());
