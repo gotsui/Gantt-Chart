@@ -210,6 +210,7 @@ function App() {
 	const [taskBars, setTaskBars] = React.useState([]);
 	const [startDate, setStartDate] = React.useState(new Date(today.getFullYear(), today.getMonth() - 2, 1));
 	const [endDate, setEndDate] = React.useState(new Date(today.getFullYear(), today.getMonth() + 2, 1));
+	const [scrollLeft, setScrollLeft] = React.useState(0);
 
 	let calendars = getCalendar(startDate, endDate);
 	let positionId = 0;
@@ -291,56 +292,25 @@ function App() {
 			ganttCalendarElement.scrollLeft = diffDate * blockSize;
 		}
 
-		// 右方向スクロール監視
-		const ganttNextMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth() + 2}`);
+		// // 右方向スクロール監視
+		// const ganttNextMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth() + 2}`);
 
-		if (ganttNextMonthElement) {
-			const observer = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
-			observer.observe(ganttNextMonthElement);
-		}
+		// if (ganttNextMonthElement) {
+		// 	const observer = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
+		// 	observer.observe(ganttNextMonthElement);
+		// }
 
-		// 左方向スクロール監視
-		const ganttLastMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth()}`);
+		// // 左方向スクロール監視
+		// const ganttLastMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth()}`);
 
-		if (ganttCalendarElement && ganttLastMonthElement) {
-			const options = {
-				root: ganttCalendarElement,
-				rootMargin: '-10px',
-			};
-			const leftObserver = new IntersectionObserver((entries) => {shiftLeft(entries, leftObserver, startDate, ganttCalendarElement)}, options);
-			leftObserver.observe(ganttLastMonthElement);
-		}
-
-		function shiftLeft(entries: IntersectionObserverEntry[], observer: IntersectionObserver, startDate: Date, calendarElement: HTMLElement) {
-			const entry = entries[0];
-
-			if (entry.isIntersecting) {
-				observer.unobserve(entry.target);
-
-				const entryId: string = entry.target.id;
-				console.log(entryId);
-				const splitIds: string[] = entryId.split('-');
-				const nextDate: Date = new Date(parseInt(splitIds[1]), parseInt(splitIds[2]) - 2, 1);
-				console.log(nextDate);
-				const nextObserveElementId: string = `${splitIds[0]}-${nextDate.getFullYear()}-${nextDate.getMonth() + 1}`;
-				console.log(nextObserveElementId);
-				const nextObserveElement: HTMLElement | null = document.getElementById(nextObserveElementId);
-
-				const nextStartDate: Date = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
-				const lastDate: Date = new Date(nextStartDate.getFullYear(), nextStartDate.getMonth() + 1, 0);
-				// calendarElement.scrollLeft += lastDate.getDate() * blockSize;
-				setStartDate(nextStartDate);
-
-				if (nextObserveElement) {
-					const options = {
-						root: ganttCalendarElement,
-						rootMargin: '-10px',
-					};
-					const nextObserver: IntersectionObserver = new IntersectionObserver((entries) => {shiftLeft(entries, nextObserver, nextStartDate, calendarElement)}, options);
-					nextObserver.observe(nextObserveElement);
-				}
-			}
-		}
+		// if (ganttCalendarElement && ganttLastMonthElement) {
+		// 	const options = {
+		// 		root: ganttCalendarElement,
+		// 		rootMargin: '-10px',
+		// 	};
+		// 	const leftObserver = new IntersectionObserver((entries) => {shiftLeft(entries, leftObserver)}, options);
+		// 	leftObserver.observe(ganttLastMonthElement);
+		// }
 
 		const nowCalendarSize = getCalendarSize();
 		const nowDisplayTasks = getDisplayTasks(tasks, positionId, nowCalendarSize.height);
@@ -356,7 +326,7 @@ function App() {
 		const observeElement: HTMLElement | null = document.getElementById(observeElementId);
 
 		if (observeElement) {
-			const observer = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
+			const observer: IntersectionObserver = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
 			observer.observe(observeElement);
 		}
 	}, [endDate]);
@@ -367,14 +337,42 @@ function App() {
 		if (entry.isIntersecting) {
 			observer.unobserve(entry.target);
 
-			const entryId = entry.target.id;
-			const splitIds = entryId.split('-');
-			const nextDate = new Date(parseInt(splitIds[1]), parseInt(splitIds[2]), 1);
-			const nextObserveElementId: string = `${splitIds[0]}-${nextDate.getFullYear()}-${nextDate.getMonth() + 1}`;
-			const nextObserveElement = document.getElementById(nextObserveElementId);
-
-			let nextEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
+			const nextEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
 			setEndDate(nextEndDate);
+		}
+	}
+
+	React.useEffect(() => {
+		const ganttCalendarElement: HTMLElement | null = document.getElementById('gantt-calendar');
+		const observeDate: Date = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
+		const observeElementId: string = `gantt-${observeDate.getFullYear()}-${observeDate.getMonth() + 1}`;
+		const observeElement: HTMLElement | null = document.getElementById(observeElementId);
+
+		if (observeElement) {
+			const options = {
+				root: ganttCalendarElement,
+				rootMargin: '-10px',
+			}
+			const observer: IntersectionObserver = new IntersectionObserver((entries) => {shiftLeft(entries, observer)}, options);
+			observer.observe(observeElement);
+		}
+	}, [startDate]);
+
+	function shiftLeft(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
+		const entry = entries[0];
+
+		if (entry.isIntersecting) {
+			observer.unobserve(entry.target);
+
+			const nextStartDate: Date = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
+			setStartDate(nextStartDate);
+
+			const ganttCalendarElement: HTMLElement | null = document.getElementById('gantt-calendar');
+
+			if (ganttCalendarElement) {
+				const lastDate: Date = new Date(nextStartDate.getFullYear(), nextStartDate.getMonth() + 1, 0);
+				ganttCalendarElement.scrollLeft += lastDate.getDate() * blockSize;
+			}
 		}
 	}
 
