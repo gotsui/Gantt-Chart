@@ -1,14 +1,13 @@
 services:
   react:
-    build: ./react/
+    build: ./react
     container_name: react
     ports:
-      - 3000:3000
+      - 5173:5173
     volumes:
-      - ./react/:/usr/src/app
+      - ./react/react_app:/data
     tty: true
     stdin_open: true
-    command: sh -c "cd react_app && npm start"
   rust:
     build: ./rust
     container_name: rust
