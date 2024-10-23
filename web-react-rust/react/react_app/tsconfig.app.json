@@ -20,5 +20,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "dist", "tsconfig.json", "tsconfig.node.json", "vite.config.ts", "tsconfig.app.json", "eslint.config.js"]
 }
