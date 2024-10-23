@@ -35,3 +35,31 @@ docker exec -it react sh
 npm install
 npm run build
 npm run dev
+
+
+
+psqlを使用したPostgreSQLへの接続
+
+```
+docker exec -it <コンテナ名> psql -U <DBユーザ名> -d <DB名>
+```
+
+例
+
+```bash
+$ docker ps
+77c161ea03d8   postgres:16            "docker-entrypoint.s…"   10 seconds ago   Up 8 seconds   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   postgres
+```
+
+```yaml:docker-compose.yml
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+```
+
+```bash
+$ docker exec -it 77c161ea03d8 psql -U postgres -d postgres
+
+# テーブル一覧
+\dt
+```
