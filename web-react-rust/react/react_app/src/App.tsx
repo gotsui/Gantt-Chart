@@ -1,6 +1,5 @@
 import React, { ChangeEvent, SyntheticEvent } from 'react';
 import './App.css';
-import './style.css';
 import { DisplayPeriod } from "./components/DisplayPeriod";
 import { GanttTask } from "./components/GanttTask";
 import { GanttDate } from "./components/GanttDate";
