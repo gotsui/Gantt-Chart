@@ -8,6 +8,7 @@ services:
       - ./react/react_app:/data
     tty: true
     stdin_open: true
+    command: sh -c "npm install && npm run dev"
   rust:
     build: ./rust
     container_name: rust
