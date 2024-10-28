@@ -1,12 +1,9 @@
 import React, { ChangeEvent, SyntheticEvent } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import './style.css';
-import { start } from "repl";
-import { DisplayPeriod } from "./conponents/DisplayPeriod";
-import { GanttTask } from "./conponents/GanttTask";
-import { GanttDate } from "./conponents/GanttDate";
-import { GanttBarArea } from "./conponents/GanttBarArea";
+import { DisplayPeriod } from "./components/DisplayPeriod";
+import { GanttTask } from "./components/GanttTask";
+import { GanttDate } from "./components/GanttDate";
+import { GanttBarArea } from "./components/GanttBarArea";
 
 function App() {
 	function getDays(year: number, month: number, blockNumber: number) {
@@ -208,9 +205,9 @@ function App() {
 	const [tasks, setTasks] = React.useState(getTasks());
 	const [displayTasks, setDisplayTasks] = React.useState([]);
 	const [taskBars, setTaskBars] = React.useState([]);
-	const [startDate, setStartDate] = React.useState(new Date(today.getFullYear(), today.getMonth() - 2, 1));
-	const [endDate, setEndDate] = React.useState(new Date(today.getFullYear(), today.getMonth() + 2, 1));
-	const [scrollLeft, setScrollLeft] = React.useState(0);
+	const [startDate, setStartDate] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
+	const [endDate, setEndDate] = React.useState(new Date(today.getFullYear(), today.getMonth(), 1));
+
 
 	let calendars = getCalendar(startDate, endDate);
 	let positionId = 0;
@@ -236,6 +233,34 @@ function App() {
 	}
 
 	let movingPageX = 0;
+
+	function handleChangeStartYear(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextStartDate = new Date(startDate);
+		nextStartDate.setFullYear(parseInt(e.target.value));
+		let nextTaskBars = getTaskBars(nextStartDate, displayTasks, blockSize);
+		setStartDate(nextStartDate);
+		setTaskBars(nextTaskBars);
+	}
+
+	function handleChangeStartMonth(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextStartDate = new Date(startDate);
+		nextStartDate.setMonth(parseInt(e.target.value) - 1);
+		let nextTaskBars = getTaskBars(nextStartDate, displayTasks, blockSize);
+		setStartDate(nextStartDate);
+		setTaskBars(nextTaskBars);
+	}
+
+	function handleChangeEndYear(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextEndDate = new Date(endDate);
+		nextEndDate.setFullYear(parseInt(e.target.value));
+		setEndDate(nextEndDate);
+	}
+
+	function handleChangeEndMonth(e: React.ChangeEvent<HTMLSelectElement>) {
+		let nextEndDate = new Date(endDate);
+		nextEndDate.setMonth(parseInt(e.target.value) - 1);
+		setEndDate(nextEndDate);
+	}
 
 	function handleMouseDownMove(e: React.MouseEvent<HTMLDivElement, MouseEvent>, task: any) {
 		if (e.target instanceof HTMLElement) {
@@ -282,36 +307,6 @@ function App() {
 	}
 
 	React.useEffect(() => {
-		// 初期スクロール位置
-		const ganttCalendarElement = document.getElementById('gantt-calendar');
-
-		if (ganttCalendarElement) {
-			const thisMonthFirstDate = new Date(today.getFullYear(), today.getMonth(), 1);
-			const diffMilliSec = thisMonthFirstDate.getTime() - startDate.getTime();
-			const diffDate = diffMilliSec / (24 * 60 * 60 * 1000);
-			ganttCalendarElement.scrollLeft = diffDate * blockSize;
-		}
-
-		// // 右方向スクロール監視
-		// const ganttNextMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth() + 2}`);
-
-		// if (ganttNextMonthElement) {
-		// 	const observer = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
-		// 	observer.observe(ganttNextMonthElement);
-		// }
-
-		// // 左方向スクロール監視
-		// const ganttLastMonthElement = document.getElementById(`gantt-${today.getFullYear()}-${today.getMonth()}`);
-
-		// if (ganttCalendarElement && ganttLastMonthElement) {
-		// 	const options = {
-		// 		root: ganttCalendarElement,
-		// 		rootMargin: '-10px',
-		// 	};
-		// 	const leftObserver = new IntersectionObserver((entries) => {shiftLeft(entries, leftObserver)}, options);
-		// 	leftObserver.observe(ganttLastMonthElement);
-		// }
-
 		const nowCalendarSize = getCalendarSize();
 		const nowDisplayTasks = getDisplayTasks(tasks, positionId, nowCalendarSize.height);
 		const nowTaskBars = getTaskBars(startDate, nowDisplayTasks, blockSize);
@@ -319,62 +314,6 @@ function App() {
 		setDisplayTasks(nowDisplayTasks);
 		setTaskBars(nowTaskBars);
 	}, []);
-
-	React.useEffect(() => {
-		const observeDate: Date = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
-		const observeElementId: string = `gantt-${observeDate.getFullYear()}-${observeDate.getMonth() + 1}`;
-		const observeElement: HTMLElement | null = document.getElementById(observeElementId);
-
-		if (observeElement) {
-			const observer: IntersectionObserver = new IntersectionObserver((entries) => {shiftRight(entries, observer)});
-			observer.observe(observeElement);
-		}
-	}, [endDate]);
-
-	function shiftRight(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
-		const entry = entries[0];
-
-		if (entry.isIntersecting) {
-			observer.unobserve(entry.target);
-
-			const nextEndDate = new Date(endDate.getFullYear(), endDate.getMonth() + 1, 1);
-			setEndDate(nextEndDate);
-		}
-	}
-
-	React.useEffect(() => {
-		const ganttCalendarElement: HTMLElement | null = document.getElementById('gantt-calendar');
-		const observeDate: Date = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 1);
-		const observeElementId: string = `gantt-${observeDate.getFullYear()}-${observeDate.getMonth() + 1}`;
-		const observeElement: HTMLElement | null = document.getElementById(observeElementId);
-
-		if (observeElement) {
-			const options = {
-				root: ganttCalendarElement,
-				rootMargin: '-10px',
-			}
-			const observer: IntersectionObserver = new IntersectionObserver((entries) => {shiftLeft(entries, observer)}, options);
-			observer.observe(observeElement);
-		}
-	}, [startDate]);
-
-	function shiftLeft(entries: IntersectionObserverEntry[], observer: IntersectionObserver) {
-		const entry = entries[0];
-
-		if (entry.isIntersecting) {
-			observer.unobserve(entry.target);
-
-			const nextStartDate: Date = new Date(startDate.getFullYear(), startDate.getMonth() - 1, 1);
-			setStartDate(nextStartDate);
-
-			const ganttCalendarElement: HTMLElement | null = document.getElementById('gantt-calendar');
-
-			if (ganttCalendarElement) {
-				const lastDate: Date = new Date(nextStartDate.getFullYear(), nextStartDate.getMonth() + 1, 0);
-				ganttCalendarElement.scrollLeft += lastDate.getDate() * blockSize;
-			}
-		}
-	}
 
 	window.addEventListener('resize', () => {
 		setCalendarSize(getCalendarSize());
@@ -519,7 +458,7 @@ function App() {
 		moved.rightResizing = false;
 	});
 
-	// タスク期間変更時の誤作動を防ぐためタスクバーのドラッグイベントを禁止する
+	// タスクバーのドラッグイベントを禁止する
 	window.addEventListener('dragstart', (e) => {
 		e.preventDefault();
 	});
@@ -569,6 +508,9 @@ function App() {
 			<div id="app">
 				<div id="gantt-header" className="h-12 p-2 flex items-center">
 					<h1 className="text-xl font-bold">ガントチャート</h1>
+					<DisplayPeriod startDate={startDate} endDate={endDate}
+					onChangeStartYear={handleChangeStartYear} onChangeStartMonth={handleChangeStartMonth}
+					onChangeEndYear={handleChangeEndYear} onChangeEndMonth={handleChangeEndMonth} />
 				</div>
 				<div id="gantt-content" className="flex">
 					<GanttTask displayTasks={displayTasks} calendarSize={calendarSize} />
